@@ -1,0 +1,20 @@
+manifest:
+  defaults:
+    remote: upstream
+
+  remotes:
+    - name: upstream
+      url-base: https://github.com/zephyrproject-rtos
+
+  group-filter:
+    - -hal
+    - +riscv
+
+  projects:
+    - name: zephyr
+      remote: upstream
+      revision: v4.4.2
+      import:
+        path-prefix: third_party
+        name-allowlist:
+          - picolibc

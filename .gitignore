@@ -1,0 +1,6 @@
+*.swp
+
+.venv/
+fw/.west/
+fw/build/
+fw/third_party/
