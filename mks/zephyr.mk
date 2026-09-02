@@ -1,8 +1,14 @@
 VENV := .venv
 FW := fw
-ZEPHYR_BASE_REL := third_party/zephyr
 UPSTREAMS_DIR ?= $(CURDIR)/upstreams
 RENODE_PATH := $(firstword $(wildcard $(UPSTREAMS_DIR)/renode*))
+ZEPHYR_BASE_REL := third_party/zephyr
+ZEPHYR_SDK_DIR ?= $(UPSTREAMS_DIR)/zephyr-sdk-llvm
+BOARD ?= renode_riscv32
+
+export ZEPHYR_SDK_INSTALL_DIR := $(ZEPHYR_SDK_DIR)
+export ZEPHYR_TOOLCHAIN_VARIANT := zephyr/llvm
+export BOARD_ROOT := $(CURDIR)/$(FW)
 
 export PATH := $(CURDIR)/$(VENV)/bin:$(RENODE_PATH):$(PATH)
 
@@ -35,25 +41,29 @@ install/toolchain:
 		  device-tree-compiler \
 		  ninja-build
 
-.PHONY: install/toolchain/riscv
-install/toolchain/riscv:
-	@ cd $(FW) && west sdk install -t riscv64-zephyr-elf
 
-.PHONY: install/zephyr
-install/zephyr:
+.PHONY: install/zephyr/proj
+install/zephyr/proj:
 	@ mkdir -p $(FW)/.west
 	@ printf "[manifest]\npath = .\nfile = west.yml\n\n[zephyr]\nbase = $(ZEPHYR_BASE_REL)\n" > $(FW)/.west/config
 	@ cd $(FW) && west update
 	@ $(VENV)/bin/pip install -r $(FW)/$(ZEPHYR_BASE_REL)/scripts/requirements-base.txt
 
 
-export ZEPHYR_TOOLCHAIN_VARIANT ?= zephyr
-export BOARD_ROOT := $(CURDIR)/$(FW)
-BOARD ?= renode_riscv32
+.PHONY: install/zephyr/sdk
+install/zephyr/sdk:
+	@ cd $(FW) && west sdk install -T -l -d $(ZEPHYR_SDK_DIR)
+
+
+.PHONY: install/zephyr
+install/zephyr: install/zephyr/proj install/zephyr/sdk
+	@ Install Zephyr done
+
 
 .PHONY: build/fw
 build/fw:
-	@ cd $(FW) && west build -p always -b $(BOARD) $(ZEPHYR_BASE_REL)/samples/hello_world
+	@ cd $(FW) && west build -p always -b $(BOARD) \
+		$(ZEPHYR_BASE_REL)/samples/hello_world
 
 .PHONY: run/renode
 run/renode: build/fw
