@@ -1,5 +1,6 @@
 *.swp
 
+upstreams/
 .venv/
 fw/.west/
 fw/build/

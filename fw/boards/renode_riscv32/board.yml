@@ -1,0 +1,6 @@
+board:
+  name: renode_riscv32
+  full_name: Custom RISC-V 32-bit Renode Board
+  vendor: custom
+  socs:
+    - name: riscv_virtual_renode

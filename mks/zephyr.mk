@@ -1,6 +1,10 @@
 VENV := .venv
 FW := fw
 ZEPHYR_BASE_REL := third_party/zephyr
+UPSTREAMS_DIR ?= $(CURDIR)/upstreams
+RENODE_PATH := $(firstword $(wildcard $(UPSTREAMS_DIR)/renode*))
+
+export PATH := $(CURDIR)/$(VENV)/bin:$(RENODE_PATH):$(PATH)
 
 .PHONY: install/zephyr/requirements
 install/zephyr/requirements:
@@ -31,6 +35,10 @@ install/toolchain:
 		  device-tree-compiler \
 		  ninja-build
 
+.PHONY: install/toolchain/riscv
+install/toolchain/riscv:
+	@ cd $(FW) && west sdk install -t riscv64-zephyr-elf
+
 .PHONY: install/zephyr
 install/zephyr:
 	@ mkdir -p $(FW)/.west
@@ -39,18 +47,14 @@ install/zephyr:
 	@ $(VENV)/bin/pip install -r $(FW)/$(ZEPHYR_BASE_REL)/scripts/requirements-base.txt
 
 
-export ZEPHYR_TOOLCHAIN_VARIANT ?= host
-# BOARD ?= qemu_riscv32
-BOARD ?= native_sim
-
-.PHONY: build/hello
-build/hello:
-	@ cd $(FW) && west build -p always -b $(BOARD) $(ZEPHYR_BASE_REL)/samples/hello_world
-
-.PHONY: run/hello
-run/hello:
-	@ cd $(FW) && west build -t run
+export ZEPHYR_TOOLCHAIN_VARIANT ?= zephyr
+export BOARD_ROOT := $(CURDIR)/$(FW)
+BOARD ?= renode_riscv32
 
 .PHONY: build/fw
 build/fw:
-	@ echo build/fw
+	@ cd $(FW) && west build -p always -b $(BOARD) $(ZEPHYR_BASE_REL)/samples/hello_world
+
+.PHONY: run/renode
+run/renode: build/fw
+	@ renode --disable-gui --console simulator/renode_riscv32.resc

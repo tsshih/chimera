@@ -1,0 +1,14 @@
+using sysbus
+mach create "renode-riscv32"
+machine LoadPlatformDescription @simulator/renode_riscv32.repl
+emulation SetGlobalQuantum "0.000001"
+
+$bin=@$ORIGIN/../fw/build/zephyr/zephyr.elf
+sysbus LoadELF $bin
+
+#logLevel 0
+showAnalyzer "uart-an" sysbus.uart0
+uart-an TimestampFormat Virtual
+
+start
+
